@@ -33,6 +33,39 @@ namespace ESP8266ThingSpeak {
         return result
     }
 
+
+    function getJson() : string {
+        let serial_str: string = ""
+        let time: number = input.runningTime()
+        while (true) {
+            serial_str += serial.readString()
+            if (serial_str.includes("}")) {
+                break
+            } 
+            if (input.runningTime() - time > 30000) break
+        }
+        return serial_str
+    }
+
+    /**
+    * Connect to Url and send parameter
+    */
+    //% block="Connect to IP / Address and send parameter. Example: "google.com" /?q=news"
+    //% ip.defl=dns address / IP
+    //% parameter.defl=http parameter
+    export function loadUrl(ip: string, parameter: string) : string {
+        if (wifi_connected) {
+            sendAT("AT+CIPSTART=\"TCP\",\"" + ip + "\",80", 0) // connect to website server
+            basic.pause(500)
+
+            let str: string = "GET " + parameter
+            sendAT("AT+CIPSEND=" + (str.length + 2))
+            sendAT(str, 0) // upload data
+            return getJson()
+        }
+        return "WIFI NOT CONNECTED"
+    }
+
     /**
     * Initialize ESP8266 module and connect it to Wifi router
     */
